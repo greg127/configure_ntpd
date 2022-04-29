@@ -1,0 +1,10 @@
+[targets]
+10.94.131.30
+10.94.131.31
+10.94.131.32
+
+[targets:vars]
+# server timezone
+ntp_timezone = 'Europe/Warsaw'
+# coma separated string with list of the NTP servers
+ntp_servers = '10.94.131.181'

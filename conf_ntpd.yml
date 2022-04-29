@@ -1,0 +1,50 @@
+---
+ - name: Setup NTP servers
+   hosts: all
+   gather_facts: no
+
+   tasks:
+
+    - name: set ntp timezone
+      shell: "timedatectl set-timezone {{ ntp_timezone }}"
+
+    - name: install NTP
+      yum: name=ntp state=installed
+      tags: ntp
+  
+    - name: create ntp config file
+      ansible.builtin.template:
+        src: ./templates/ntp.j2
+        dest: /etc/ntp.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: stop ntpd service
+      service: 
+        name: ntpd
+        state: stopped
+        enabled: yes
+  
+    - name: sync time initialy
+      shell: ntpdate -u {{ ntp_servers.split(',')[0] }}
+
+    - name: start ntpd service
+      service:
+        name: ntpd
+        state: started
+        enabled: yes
+    
+    - name: wait for ntpstat to success
+      command:
+        cmd: ntpstat
+      register: ntp_stats
+      until: ntp_stats.rc == 0
+      retries: 10
+      delay: 5
+
+    - name: server time status 
+      debug:
+        msg: "{{ ntp_stats.stdout | regex_search('^synchronised') }}" 
+
+
